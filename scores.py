@@ -1,7 +1,5 @@
 
 from scipy.spatial.distance import euclidean
-from math import isclose
-from gerryframe import Plan, Chain, updaters
 
 
 # Write our scoring function
