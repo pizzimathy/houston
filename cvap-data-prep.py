@@ -112,7 +112,7 @@ for year in years:
         row = []
         for line in range(0, 13):
             rrow = cvaps.iloc[i+line]
-            cvap = rrow["cvap_est"]
+            cvap = rrow["adu_est"]
             row += [cvap]
 
         m = [geoid] + mapcvap(row)

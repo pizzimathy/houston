@@ -33,28 +33,88 @@
             
   <div class="section" id="redistricting-in-houston">
 <h1>Redistricting in Houston<a class="headerlink" href="#redistricting-in-houston" title="Permalink to this headline">¶</a></h1>
-<p>Documented here are key portions of the code used to study redistricting in
+<p>Documented here are key portions of the code, alongside some of the mathematics,
+used to study redistricting in
 Houston. First is the <a class="reference internal" href="#module-scores" title="scores"><code class="xref py py-class docutils literal notranslate"><span class="pre">scores</span></code></a> module, which details the scoring methods
 used to decide which districting plans are acceptable and which are not.</p>
 <span class="target" id="module-scores"></span><dl class="py function">
-<dt id="scores.idealscore">
-<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">idealscore</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ideal</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.idealscore" title="Permalink to this definition">¶</a></dt>
+<dt id="scores.droop">
+<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">droop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seats</span></em>, <em class="sig-param"><span class="n">updater</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.droop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an updater function to calculate how many seats are won by a given
+voting bloc in a district. Makes use of the droop quota, which gives that,
+for <span class="math notranslate nohighlight">\(n\)</span> ballots cast in an election for <span class="math notranslate nohighlight">\(k\)</span> seats, any candidate
+receiving</p>
+<div class="math notranslate nohighlight">
+\[\left\lfloor \frac{n}{k+1} \right\rfloor + 1\]</div>
+<p>ballots is guaranteed to win a seat. We can infer, then, that any population
+making up a <span class="math notranslate nohighlight">\(1/(k+1)\)</span> proportion of the population can elect a
+candidate of their choice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seats</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of seats per district.</p></li>
+<li><p><strong>updater</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – The name of the updater for population proportions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Updater function.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>func</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="scores.ideal">
+<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">ideal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ideal</span></em>, <em class="sig-param"><span class="n">updater</span></em>, <em class="sig-param"><span class="n">steps</span></em>, <em class="sig-param"><span class="n">L</span><span class="o">=</span><span class="default_value">700</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">0.0005</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.ideal" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function accepts an ideal (population) distribution and returns a score
 function. This score function rates a given districting plan based on its
 similarity (using some pre-defined metric of “similarity”) to <code class="docutils literal notranslate"><span class="pre">ideal</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>ideal</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – <p>Desired values for a single statistic across <span class="math notranslate nohighlight">\(k\)</span>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ideal</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – <p>Desired values for a single statistic across <span class="math notranslate nohighlight">\(k\)</span>
 districts; <code class="docutils literal notranslate"><span class="pre">ideal</span></code> is a <span class="math notranslate nohighlight">\(k\)</span>-dimensional vector <span class="math notranslate nohighlight">\(\pi\)</span>
 whose entries are in non-decreasing order on <span class="math notranslate nohighlight">\([0,1]\)</span> and such that</p>
 <div class="math notranslate nohighlight">
 \[\sum_{i=1}^k \pi_i \leq k,\]</div>
-<p>which matches the intuition that any given population can, at most, make
-up all of the population in any given district.</p>
-</p>
+<p>which matches the intuition that any given demographic group can, at
+most, make up all of the population in any given district.</p>
+</p></li>
+<li><p><strong>updater</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Updater alias for the statistic we’re collecting.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The number of steps taken by the chain simulation.</p></li>
+<li><p><strong>L</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – Maximum temperature.</p></li>
+<li><p><strong>k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – Slope of the logit curve.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>A score in <span class="math notranslate nohighlight">\([0,1]\)</span>.</p>
+<dd class="field-even"><p>A function which produces a score in <span class="math notranslate nohighlight">\([0,1]\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="scores.maxcost">
+<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">maxcost</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.maxcost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solves the maximum bipartite matching problem for the bipartite graph with
+vertex sets <span class="math notranslate nohighlight">\(A=\{a_1,\dots,a_k\}\)</span> and <span class="math notranslate nohighlight">\(B=\{b_1,\dots,b_k\}\)</span>
+such that the edge <span class="math notranslate nohighlight">\((a_i, b_j)\)</span> has weight <span class="math notranslate nohighlight">\(|u_i-v_j|\)</span>, with
+<span class="math notranslate nohighlight">\(u,v\)</span> distribution vectors in the unit <span class="math notranslate nohighlight">\(k\)</span>-cube. Tells us the
+maximum sum of squared differences over all permutations of coordinates in
+<span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – Vector.</p></li>
+<li><p><strong>v</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – Vector.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Maximum sum of squared differences.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
@@ -62,6 +122,86 @@ up all of the population in any given district.</p>
 </dl>
 </dd></dl>
 
+<dl class="py function">
+<dt id="scores.npd">
+<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">npd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">i</span></em>, <em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.npd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper function for the <code class="xref py py-meth docutils literal notranslate"><span class="pre">_npd()</span></code> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><em>list</em></a>) – Ideal vector.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><em>str</em></a>) – Updater alias from which to get the distribution vector.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">_npd()</span></code> function with the <code class="docutils literal notranslate"><span class="pre">ideal</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code> arguments
+pre-filled.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>func</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="scores.temperature">
+<code class="sig-prename descclassname">scores.</code><code class="sig-name descname">temperature</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">L</span></em>, <em class="sig-param"><span class="n">N</span></em>, <em class="sig-param"><span class="n">k</span></em><span class="sig-paren">)</span><a class="headerlink" href="#scores.temperature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Here we define our temperature parameter, which is a function polynomial in
+the number of steps in the chain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The current step number.</p></li>
+<li><p><strong>N</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><em>int</em></a>) – The total number of steps.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The exponent to which we raise (t/N); this gives us an
+exponential function with all values in <span class="math notranslate nohighlight">\([0,1]\)</span></p></li>
+<li><p><strong>prob</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><em>float</em></a>) – The probability that, if the current plan and the most
+distant plan are as distant from each other as possible,</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A value in <span class="math notranslate nohighlight">\([0,1]\)</span>.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>The calculation of this score, which we call <strong>Ideal</strong>, takes
+advantage of three key mathematical facts relating to its domain, a function
+implicitly defined by the sorting of vector entries, and the image of the
+previous function.</p>
+<div class="section" id="ideal-s-domain">
+<h2><strong>Ideal</strong>’s Domain<a class="headerlink" href="#ideal-s-domain" title="Permalink to this headline">¶</a></h2>
+<p>First, we note that <strong>Ideal</strong> is a function from <span class="math notranslate nohighlight">\(\{\pi\} \times \mathbb R^k\)</span>
+to the reals, as we pair vectors in the space <span class="math notranslate nohighlight">\(\mathbb R^k\)</span> with the our
+ideal vector <span class="math notranslate nohighlight">\(\pi\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\textbf{Ideal}: \mathbb \{\pi\} \times \mathbb R^k \to \mathbb R.\]</div>
+<p>However, we can further constrain the domain and image sets. First, we note that
+any input vector <span class="math notranslate nohighlight">\(v\)</span> to <strong>Ideal</strong> has all its entries in <span class="math notranslate nohighlight">\([0,1]\)</span>.
+We label the set of vectors defined by the above condition by <span class="math notranslate nohighlight">\(W\)</span>;
+formally,</p>
+<div class="math notranslate nohighlight">
+\[W = \left\{ v \in \mathbb R^k: v_i \in [0,1] \right\}.\]</div>
+<p>Consequently, we have that <span class="math notranslate nohighlight">\(||v||_2 \leq \sqrt k\)</span>, as, for any two vectors
+<span class="math notranslate nohighlight">\(p\)</span> and <span class="math notranslate nohighlight">\(q\)</span> in <span class="math notranslate nohighlight">\(W\)</span>, <span class="math notranslate nohighlight">\(0 \leq (p_i-q_i)^2 \leq 1\)</span>. Thus,
+the set <span class="math notranslate nohighlight">\(W\)</span> is isomorphic to the chunk <span class="math notranslate nohighlight">\(S^*\)</span> of the <span class="math notranslate nohighlight">\((k-1)\)</span>-dimensional
+sphere <span class="math notranslate nohighlight">\(S^{k-1} \supset S^*\)</span> such that all points in <span class="math notranslate nohighlight">\(S^*\)</span> have
+positive entries in <span class="math notranslate nohighlight">\([0,1]\)</span>. Now, we can better describe our function
+<strong>Ideal</strong>:</p>
+<div class="math notranslate nohighlight">
+\[\textbf{Ideal}: \{\pi\} \times W \to [0,1].\]</div>
+</div>
+<div class="section" id="implicit-functions-on-sorted-vectors">
+<h2>Implicit Functions on Sorted Vectors<a class="headerlink" href="#implicit-functions-on-sorted-vectors" title="Permalink to this headline">¶</a></h2>
+<p>The purpose of the <strong>Ideal</strong> function is to compare some vector <span class="math notranslate nohighlight">\(v\)</span> to
+some “ideal” vector <span class="math notranslate nohighlight">\(\pi\)</span> and spit out a score on <span class="math notranslate nohighlight">\([0,1]\)</span> telling
+us how “close” the vectors are to each other. For our purposes, we’re treating
+these vectors as distributions – not as probability distributions, but as
+population distributions –</p>
+</div>
 </div>
 
 

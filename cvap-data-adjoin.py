@@ -4,6 +4,7 @@ import pandas as pd
 import tqdm
 import json
 import os
+import sys
 
 from geometry import retrieve, reformat, prorate, dissolve
 
@@ -115,7 +116,6 @@ if not (os.path.exists("./data/steps/step-1/step-1-bgs.shp") or os.path.exists("
 else:
     print("Step 1 already completed; moving to Step 2.")
 
-
 ##########
 # STEP 2 #
 ##########
@@ -125,6 +125,9 @@ if not os.path.exists("./data/steps/step-2/blocks.shp") or restart:
     blocks = gpd.read_file("./data/steps/step-1/step-1-blocks.shp")
     bgs = gpd.read_file("./data/steps/step-1/step-1-bgs.shp")
 
+    # Filter warnings.
+    import warnings;  warnings.filterwarnings('ignore', 'GeoSeries.isna', UserWarning)
+
     # Get column names from codebook file.
     with open("./data/demographics/cvap-codebook.json") as f: codebook = json.load(f)
     columns = list(codebook["2018"].keys()) + ["TOTPOP", "2010VAP"]
@@ -132,7 +135,6 @@ if not os.path.exists("./data/steps/step-2/blocks.shp") or restart:
     # Prorate desired columns from block groups down to blocks.
     blocks = prorate(blocks, bgs, "2010VAP", "2010VAP", columns=columns)
     blocks.to_file("./data/steps/step-2/blocks.shp")
-    print(blocks.head())
     print("Step 2 complete.")
 else:
     print("Step 2 already completed; moving to Step 3.")
@@ -186,21 +188,21 @@ else:
 
 if not os.path.exists("./data/steps/step-4/step-4.shp") or restart:
     # Assign blocks to precincts.
-    precincts = gpd.read_file("./data/geometries/all-precincts/")
+    precincts = gpd.read_file("./data/geometries/TX_vtds/")
     blocks = gpd.read_file("./data/steps/step-3/")
     blocks = blocks.to_crs(precincts.crs)
 
-    blocks["precinct"] = 0
+    blocks["VTD"] = ""
 
     for _, brow in tqdm.tqdm(blocks.iterrows(), total=len(blocks)):
-        largest = (0, 0)
+        largest = (0, "")
         for index, prow in precincts.iterrows():
             block, precinct = brow["geometry"], prow["geometry"]
             area = block.intersection(precinct).area
 
-            if area > largest[0]: largest = (area, index)
+            if area > largest[0]: largest = (area, prow["VTD"])
 
-        blocks.at[_, "precinct"] = largest[1]
+        blocks.at[_, "VTD"] = largest[1]
 
     # Write to file.
     blocks.to_file("./data/steps/step-4/step-4.shp")
@@ -215,9 +217,14 @@ if not os.path.exists("./data/steps/step-5/fractured-precincts.shp") or restart:
     # Get column names from codebook file.
     with open("./data/demographics/cvap-codebook.json") as f: codebook = json.load(f)
     columns = list(codebook["2018"].keys()) + ["TOTPOP", "2010VAP"]
+    columns += [
+        'PRES12R', 'PRES12D', 'SEN12R', 'SEN12D', 'TOTVR12', 'TOTTO12',
+        'SEN14R', 'SEN14D', 'GOV14R', 'GOV14D', 'TOTVR14', 'TOTTO14', 'PRES16D',
+        'PRES16R', 'TOTVR16', 'TOTTO16'
+    ]
 
     # Dissolve.
-    fractured = dissolve(blocks, join="precinct", columns=columns)
+    fractured = dissolve(blocks, join="VTD", columns=columns)
     fractured.to_file("./data/steps/step-5/fractured-precincts.shp")
 else:
     print("Step 5 already completed; set `restart = True` to re-do process.")

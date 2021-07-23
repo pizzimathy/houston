@@ -39,6 +39,9 @@ def prorate(target, source, targetcol, sourcecol, columns):
     :param columns: Columns to prorate.
     :return: Geodataframe with prorated data.
     """
+    # Set maup progress.
+    maup.progress_bar = True
+
     assignment = maup.assign(target, source)
     weights = target[targetcol] / assignment.map(source[sourcecol])
     prorated = maup.prorate(assignment, source[columns], weights)
